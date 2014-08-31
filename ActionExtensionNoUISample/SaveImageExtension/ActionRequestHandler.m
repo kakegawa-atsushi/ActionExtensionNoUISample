@@ -1,0 +1,53 @@
+//
+//  ActionRequestHandler.m
+//  SaveImageExtension
+//
+//  Created by KAKEGAWA Atsushi on 2014/08/31.
+//  Copyright (c) 2014年 KAKEGAWA Atsushi. All rights reserved.
+//
+
+#import "ActionRequestHandler.h"
+#import <MobileCoreServices/MobileCoreServices.h>
+
+@import ActionExtensionNoUIEmbeddedLib;
+
+@interface ActionRequestHandler ()
+
+@property (nonatomic, strong) NSExtensionContext *extensionContext;
+
+@end
+
+@implementation ActionRequestHandler
+
+- (void)beginRequestWithExtensionContext:(NSExtensionContext *)context {
+    self.extensionContext = context;
+    
+    NSExtensionItem *item = self.extensionContext.inputItems.firstObject;
+    NSItemProvider *itemProvider = item.attachments.firstObject;
+    
+    if ([itemProvider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
+        [itemProvider loadItemForTypeIdentifier:(NSString *)kUTTypeImage options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
+            if (error) {
+                NSLog(@"%@", error);
+                [self.extensionContext cancelRequestWithError:error];
+                return;
+            }
+            
+            UIImage *image = (UIImage *)item;
+            
+            NSError *serviceError = nil;
+            ImageService *service = [ImageService new];
+            [service saveLatestImage:image error:&error];
+            
+            if (serviceError) {
+                [self.extensionContext cancelRequestWithError:serviceError];
+                return;
+            }
+            
+            [self.extensionContext completeRequestReturningItems:nil completionHandler:nil];
+        }];
+    }
+    
+}
+
+@end

@@ -28,8 +28,15 @@
     if ([itemProvider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
         [itemProvider loadItemForTypeIdentifier:(NSString *)kUTTypeImage options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
             if (error) {
-                NSLog(@"%@", error);
                 [self.extensionContext cancelRequestWithError:error];
+                return;
+            }
+            
+            if (![(NSObject *)item isKindOfClass:[UIImage class]]) {
+                NSError *unavailableError = [NSError errorWithDomain:NSItemProviderErrorDomain
+                                                                code:NSItemProviderUnexpectedValueClassError
+                                                            userInfo:nil];
+                [self.extensionContext cancelRequestWithError:unavailableError];
                 return;
             }
             
@@ -37,7 +44,7 @@
             
             NSError *serviceError = nil;
             ImageService *service = [ImageService new];
-            [service saveLatestImage:image error:&error];
+            [service saveLatestImage:image error:&serviceError];
             
             if (serviceError) {
                 [self.extensionContext cancelRequestWithError:serviceError];
@@ -46,8 +53,12 @@
             
             [self.extensionContext completeRequestReturningItems:nil completionHandler:nil];
         }];
+    } else {
+        NSError *unavailableError = [NSError errorWithDomain:NSItemProviderErrorDomain
+                                                        code:NSItemProviderItemUnavailableError
+                                                    userInfo:nil];
+        [self.extensionContext cancelRequestWithError:unavailableError];
     }
-    
 }
 
 @end

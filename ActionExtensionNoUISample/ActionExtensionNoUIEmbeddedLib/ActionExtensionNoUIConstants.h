@@ -9,4 +9,3 @@
 
 static NSString * const AppGroupIdentifier = @"group.jp.classmethod.ActionExtensionNoUISample";
 
-static NSString * const UserDefaultsLastestImagePathKey = @"latestImagePath";

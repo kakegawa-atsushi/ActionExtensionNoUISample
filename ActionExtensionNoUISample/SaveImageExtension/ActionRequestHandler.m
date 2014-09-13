@@ -26,9 +26,11 @@
     NSItemProvider *itemProvider = item.attachments.firstObject;
     
     if ([itemProvider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
+        
+        __weak typeof(self) weakSelf = self;
         [itemProvider loadItemForTypeIdentifier:(NSString *)kUTTypeImage options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
             if (error) {
-                [self.extensionContext cancelRequestWithError:error];
+                [weakSelf.extensionContext cancelRequestWithError:error];
                 return;
             }
             
@@ -36,7 +38,7 @@
                 NSError *unavailableError = [NSError errorWithDomain:NSItemProviderErrorDomain
                                                                 code:NSItemProviderUnexpectedValueClassError
                                                             userInfo:nil];
-                [self.extensionContext cancelRequestWithError:unavailableError];
+                [weakSelf.extensionContext cancelRequestWithError:unavailableError];
                 return;
             }
             
@@ -47,11 +49,11 @@
             [service saveLatestImage:image error:&serviceError];
             
             if (serviceError) {
-                [self.extensionContext cancelRequestWithError:serviceError];
+                [weakSelf.extensionContext cancelRequestWithError:serviceError];
                 return;
             }
             
-            [self.extensionContext completeRequestReturningItems:nil completionHandler:nil];
+            [weakSelf.extensionContext completeRequestReturningItems:nil completionHandler:nil];
         }];
     } else {
         NSError *unavailableError = [NSError errorWithDomain:NSItemProviderErrorDomain
